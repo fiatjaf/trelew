@@ -1,6 +1,6 @@
 {
   "name": "trelew",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "An interactive command-line app for Trello.",
   "main": "index.js",
   "engines": {

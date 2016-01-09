@@ -17,6 +17,7 @@ var session = module.exports.session = {
   'notifications': null,
   'current': {
     'entity': [],
+    'vcommands': [],
     'boards': [],
     'lists': [],
     'cards': [],
@@ -40,7 +41,8 @@ vorpal
     if (args.options.token) config.store.set('token', args.options.token)
     let userToken = config.store.get('token')
     if (userToken) {
-      logged.call(this, userToken, cb)
+      Trello.token = userToken
+      logged.call(this, cb)
     } else {
       this.log(`For the first access, you will have to get an authorization token from Trello.
 Please go to
@@ -54,39 +56,36 @@ Please go to
         message: `and paste here the token you'll get: `
       }, (result) => {
         config.store.set('token', result.token)
-        logged.call(this, result.token, cb)
+        Trello.token = result.token
+        logged.call(this, cb)
       })
     }
   })
 
 vorpal
-  .command('cd ..')
-  .action(function (_, cb) {
-    let prevLevel = helpers.currentLevel()
-    session.current.entity.shift()
-    let level = helpers.currentLevel()
-
-    if (prevLevel === 'card' && level === 'board') {
-      /* do nothing */
-    } else {
-      /* eliminate all commands specific to the prevLevel */
-      switch (prevLevel) {
-        case 'list':
-          session.current.cards.forEach(l => {
-            let command = vorpal.find(helpers.slug(l))
-            if (command) command.remove()
-          })
-          break
-        case 'board':
-          session.current.lists.forEach(l => {
-            let command = vorpal.find(helpers.slug(l))
-            if (command) command.remove()
-          })
-          break
-      }
+  .command('cd [path]', 'move back in the hierarchy')
+  .action(function (args, cb) {
+    if (args.path !== '..') {
+      return cb() // only support '..' for now
     }
 
-    vorpal.exec('ls').then(cb).catch(e => this.log(e.stack) && process.exit())
+    session.current.entity.shift()
+    let entity = session.current.entity[0]
+    let level = helpers.currentLevel()
+    switch (level) {
+      case 'card':
+        enterCard.call(this, entity, cb)
+        break
+      case 'list':
+        enterList.call(this, entity, cb)
+        break
+      case 'board':
+        enterBoard.call(this, entity, cb)
+        break
+      case 'user':
+        logged.call(this, cb)
+        break
+    }
   })
 
 vorpal
@@ -138,8 +137,6 @@ function enterCard (card, cb) {
   })
   .then(res => {
     vorpal.delimiter(helpers.color(helpers.slug(card)) + '~$')
-    session.current.level = 'card'
-    session.current.entity.unshift(card)
     session.current.comments = res.actions
     session.current.attachments = res.attachments
     session.current.checklists = res.checklists
@@ -150,10 +147,14 @@ function enterCard (card, cb) {
     this.log(helpers.color2(session.current.attachments.length) + ' attachments')
   })
   .then(() => {
-    // edit cards
-    var edit = vorpal.find('edit')
-    if (edit) edit.remove()
-    vorpal
+    // clean old commands
+    for (var k in session.current.vcommands) {
+      session.current.vcommands[k].remove()
+      delete session.current.vcommands[k]
+    }
+
+    // add new commands
+    session.current.vcommands['edit'] = vorpal
       .command('edit', "edit this card's description.")
       .action(function (_, cb) {
         let newdesc = editInVim(card.desc)
@@ -170,11 +171,9 @@ function enterCard (card, cb) {
         })
       })
 
-    // post a comment
-    var comment = vorpal.find('comment')
-    if (comment) comment.remove()
-    vorpal
+    session.current.vcommands['comment'] = vorpal
       .command('comment [text]', 'post a comment to this card')
+      .alias('post [text]')
       .action(function (args, cb) {
         let newcomment = editInVim(args.text || '')
         this.log('\n' + helpers.md(newcomment) + '\n')
@@ -190,10 +189,7 @@ function enterCard (card, cb) {
         })
       })
 
-    // list comments
-    var comments = vorpal.find('comments')
-    if (comments) comments.remove()
-    vorpal
+    session.current.vcommands['comments'] = vorpal
       .command('comments', "list this card's comments.")
       .alias('ls comments')
       .action(function (_, cb) {
@@ -201,10 +197,7 @@ function enterCard (card, cb) {
         cb()
       })
 
-    // list checklists
-    var checklists = vorpal.find('checklists')
-    if (checklists) checklists.remove()
-    vorpal
+    session.current.vcommands['checklists'] = vorpal
       .command('checklists', "show this card's checklists.")
       .alias('ls checklists')
       .action(function (_, cb) {
@@ -212,10 +205,7 @@ function enterCard (card, cb) {
         cb()
       })
 
-    // list attachments
-    var attachments = vorpal.find('attachments')
-    if (attachments) attachments.remove()
-    vorpal
+    session.current.vcommands['attachments'] = vorpal
       .command('attachments', "show this card's attachments.")
       .alias('ls attachments')
       .action(function (_, cb) {
@@ -236,18 +226,23 @@ function enterList (list, cb) {
   })
   .then(res => {
     vorpal.delimiter(helpers.color(helpers.slug(list)) + '~$')
-    session.current.level = 'list'
-    session.current.entity.unshift(list)
     session.current.cards = res.cards
     helpers.listCards.call(this)
   })
   .then(() => {
+    // clean old commands
+    for (var k in session.current.vcommands) {
+      session.current.vcommands[k].remove()
+      delete session.current.vcommands[k]
+    }
+
+    // add new commands
     session.current.cards.forEach(card => {
       let slug = helpers.slug(card)
-      if (vorpal.find(slug)) return
-      vorpal
-        .command(slug, `enters card '${slug}'`)
+      session.current.vcommands[slug] = vorpal
+        .command(slug, `enters card '${card.name}'`)
         .action(function (_, cb) {
+          session.current.entity.unshift(card)
           enterCard.call(this, card, cb)
         })
     })
@@ -271,8 +266,6 @@ function enterBoard (board, cb) {
   })
   .then(res => {
     vorpal.delimiter(helpers.color(helpers.slug(board)) + '~$')
-    session.current.level = 'board'
-    session.current.entity.unshift(board)
     res.lists.forEach(l => {
       l.cards = []
       res.cards.forEach(c => {
@@ -286,12 +279,19 @@ function enterBoard (board, cb) {
     helpers.listLists.call(this)
   })
   .then(() => {
+    // clean old commands
+    for (var k in session.current.vcommands) {
+      session.current.vcommands[k].remove()
+      delete session.current.vcommands[k]
+    }
+
+    // add new commands
     session.current.lists.forEach(list => {
       let slug = helpers.slug(list)
-      if (vorpal.find(slug)) return
-      vorpal
+      session.current.vcommands[slug] = vorpal
         .command(slug, `enters list '${slug}'`)
         .action(function (_, cb) {
+          session.current.entity.unshift(list)
           enterList.call(this, list, cb)
         })
     })
@@ -300,9 +300,8 @@ function enterBoard (board, cb) {
   .catch(e => this.log(e.stack) && process.exit())
 }
 
-function logged (token, cb) {
+function logged (cb) {
   this.delimiter('fetching your data...')
-  Trello.token = token
   return Trello.getAsync('/1/members/me', {
     fields: 'username',
     boards: 'open',
@@ -311,7 +310,6 @@ function logged (token, cb) {
     notifications_limit: 50
   })
   .then(res => {
-    session.current.level = 'user'
     session.notifications = res.notifications.filter(d => d.unread)
     delete res.notifications
     session.current.boards = res.boards
@@ -319,13 +317,19 @@ function logged (token, cb) {
     session.user = res
   })
   .then(() => {
+    // clean old commands
+    for (var k in session.current.vcommands) {
+      session.current.vcommands[k].remove()
+      delete session.current.vcommands[k]
+    }
+
+    // add new commands
     session.current.boards.forEach(board => {
       let slug = helpers.slug(board)
-      if (vorpal.find(slug)) return
-      vorpal
+      session.current.vcommands[slug] = vorpal
         .command(slug, `enters board '${board.name}'`)
-        .alias(`cd ${slug}`)
         .action(function (_, cb) {
+          session.current.entity.unshift(board)
           enterBoard.call(this, board, cb)
         })
     })

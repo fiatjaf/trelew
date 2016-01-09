@@ -55,20 +55,20 @@ function md (text) {
 }
 
 function currentLevel () {
-  if (session.current.entity[0].desc) {
+  if (session.current.entity.length === 0) {
+    return 'user'
+  } else if (session.current.entity[0].due !== undefined) {
     return 'card'
-  } else if (session.current.entity[0].dateLastActivity) {
+  } else if (session.current.entity[0].dateLastActivity !== undefined) {
     return 'board'
   } else if (session.current.entity.length > 1) {
     return 'list'
-  } else if (session.user) {
-    return 'user'
   }
   return 'auth'
 }
 
 function slug (entity) {
-  return slugify(entity.name)
+  return truncate(slugify(entity.name), 26)
 }
 
 function listBoards () {
