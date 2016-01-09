@@ -1,6 +1,6 @@
 {
   "name": "trelew",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "An interactive command-line app for Trello.",
   "main": "index.js",
   "engines": {
@@ -38,6 +38,7 @@
     "mkdirp": "^0.5.1",
     "node-trello": "^1.1.2",
     "pad": "^1.0.0",
+    "relative-date": "^1.1.2",
     "slugg": "^0.1.2",
     "split-words": "^1.0.2",
     "tiny-promisify": "^0.1.0",

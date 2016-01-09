@@ -20,9 +20,11 @@ trelew
 
 On the first run you'll be asked to generate a token.
 
-After that, you can navigate between your boards, lists and cards just by typing their name (just start typing and press TAB for autocompletion). For visualizing available options and information about current board/list/card, type `ls`.
+After that, you can navigate between your boards, lists and cards just by typing their name (just start typing and press TAB for autocompletion). For visualizing available options and information about current board/list/card, use `ls`.
 
-Once in a card, type `ls` to read its descrition, `edit` to edit the description, `comments` to read the last comments, `comment` to add a new comment, `checklists` and `attachments` to see checklists and attachments.
+Once in a list, use `add card` to create a new card.
+
+Once in a card, use `ls` to read its descrition, `edit` to edit the description, `comments` to read the last comments, `add comment` or `post` to add a new comment, `checklists` and `attachments` to see checklists and attachments.
 
 `cd ..` will go back to the previous level.
 

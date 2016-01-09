@@ -22,7 +22,6 @@ var session = module.exports.session = {
     'boards': [],
     'lists': [],
     'cards': [],
-    'members': [],
     'checklists': [],
     'comments': [],
     'attachments': []
@@ -130,8 +129,6 @@ function enterCard (card, cb) {
     action_memberCreator_fields: 'username',
     attachments: 'true',
     attachment_fields: 'name,url',
-    members: 'true',
-    member_fields: 'username',
     checklists: 'all',
     checkItemStates: 'true',
     checklist_fields: 'name'
@@ -174,10 +171,9 @@ function enterCard (card, cb) {
 
     session.current.vcommands['comment'] = vorpal
       .command('add comment [text...]', 'post a comment to this card')
-      .alias('comment')
       .alias('post')
       .action(function (args, cb) {
-        let newcomment = editInVim(args.text.join(' ') || '')
+        let newcomment = editInVim((args.text || []).join(' ') || '')
         if (!newcomment.trim()) {
           cb()
         }
@@ -224,7 +220,7 @@ function enterList (list, cb) {
   return Trello.getAsync(`/1/lists/${list.id}`, {
     fields: 'id',
     cards: 'open',
-    card_fields: 'name,desc,due,url'
+    card_fields: 'name,desc,due'
   })
   .then(res => {
     vorpal.delimiter(helpers.color(helpers.slug(list)) + '~$')
@@ -287,10 +283,8 @@ function enterBoard (board, cb) {
     actions_since: 'lastView',
     lists: 'open',
     list_fields: 'name',
-    members: 'all',
-    member_fields: 'username',
     cards: 'open',
-    card_fields: 'name,idList,desc,due,url'
+    card_fields: 'name,idList,desc,due'
   })
   .then(res => {
     vorpal.delimiter(helpers.color(helpers.slug(board)) + '~$')
@@ -303,7 +297,6 @@ function enterBoard (board, cb) {
       })
     })
     session.current.lists = res.lists
-    this.log(`members of this board:\n${res.members.map(m => ' - ' + m.username).join('\n')}`)
     helpers.listLists.call(this)
   })
   .then(() => {
@@ -345,7 +338,9 @@ function logged (cb) {
   return Trello.getAsync('/1/members/me', {
     fields: 'username',
     boards: 'open',
-    board_fields: 'dateLastActivity,desc,name,url',
+    board_fields: 'dateLastActivity,desc,name,memberships',
+    board_memberships: 'active',
+    board_lists: 'open',
     notifications: 'all',
     notifications_limit: 50
   })

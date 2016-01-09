@@ -1,8 +1,9 @@
 'use strict'
 
 const slugify = require('slugg')
-const truncate = require('truncate')
+const tru = require('truncate')
 const pad = require('pad')
+const relativeDate = require('relative-date')
 const marked = require('marked')
 const TerminalRenderer = require('marked-terminal')
 const chalk = require('chalk')
@@ -20,10 +21,16 @@ module.exports = {
   color,
   color2,
   color3,
-  line
+  line,
+  truncate
 }
 
 var session = require('.').session
+
+let allEscapes = Object.keys(chalk.styles).map(c => chalk.styles[c].close).join('')
+function truncate (text, number) {
+  return tru(text, number) + allEscapes
+}
 
 function line () {
   return '\n' + md('---') + '\n'
@@ -50,9 +57,8 @@ marked.setOptions({
     reflowText: true
   })
 })
-let allEscapes = Object.keys(chalk.styles).map(c => chalk.styles[c].close).join('')
 function md (text) {
-  return marked(text) + allEscapes
+  return marked(text)
 }
 
 function currentLevel () {
@@ -68,30 +74,52 @@ function currentLevel () {
   return 'auth'
 }
 
+var slugsCache = {}
+var slugsMade = {}
 function slug (entity) {
-  return truncate(slugify(entity.name), 26)
+  var s = slugsCache[entity.name]
+  if (s) {
+    return s
+  }
+
+  s = slugify(entity.name).slice(0, 26)
+  if (!s) {
+    s = '--unnamed--0'
+  }
+
+  var i = 1
+  while (s in slugsMade) {
+    s = s.slice(0, -1) + i
+    i++
+  }
+  slugsMade[s] = true
+  slugsCache[entity.name] = s
+  return s
 }
 
 function listBoards () {
   this.log('\nyour boards:\n' + session.current.boards.map(b => {
-    return ` ${color3('-')} ${pad(b.name, 40)} as ${pad(color2(slug(b)), 40)}`
+    let nmembers = b.memberships.length
+    let nlists = b.lists.length
+    let last = relativeDate(Date.parse(b.dateLastActivity))
+    return ` ${color3('-')} ${truncate(pad(b.name, 40), 40)} ${color3(pad(last, 15))} ${pad(2, nmembers)} ${color2('members')} ${pad(2, nlists)} ${color2('lists')}`
   }).join('\n'))
 }
 
 function listLists () {
   this.log('\nlists in this board:\n' + session.current.lists.map(b => {
-    let cards = b.cards.map(c => color2(truncate(c.name, 9))).slice(0, 5).join(', ')
-    return ` ${color3('-')} ${pad(truncate(b.name, 27), 28)}: [${cards}]`
+    let cards = b.cards.map(c => color3(truncate(c.name, 10))).slice(0, 6).join(', ')
+    return ` ${color3('-')} ${truncate(pad(b.name, 28), 28)}: [${cards}]`
   }).join('\n'))
 }
 
 function listCards () {
   this.log('\ncards in this list:\n' + session.current.cards.map(b => {
-    let name = pad(truncate(b.name, 36), 37)
+    let name = truncate(pad(b.name, 37), 37)
     if (!b.due) {
-      return ` ${color3('-')} ${name} > "${color2(md(truncate(b.desc, 44))).replace(/[\n\r]/g, ' ')}"`
+      return ` ${color3('-')} ${name} > "${color2(truncate(md(b.desc), 44)).replace(/[\n\r]/g, ' ')}"`
     } else {
-      return ` ${color3('-')} ${name} (due ${b.due.split('.')[0]}) > "${color2(md(truncate(b.desc, 20))).replace(/[\n\r]/g, ' ')}"`
+      return ` ${color3('-')} ${name} (due ${b.due.split('.')[0]}) > "${color2(truncate(md(b.desc), 20)).replace(/[\n\r]/g, ' ')}"`
     }
   }).join('\n'))
 }
