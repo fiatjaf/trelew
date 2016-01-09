@@ -294,6 +294,16 @@ function enterBoard (board, cb) {
           session.current.entity.unshift(list)
           enterList.call(this, list, cb)
         })
+
+      list.cards.forEach(card => {
+        let slug = helpers.slug(card)
+        session.current.vcommands[slug] = vorpal
+          .command(slug, `enters card '${slug}'`)
+          .action(function () {
+            session.current.entity.unshift(card)
+            enterCard.call(this, card, cb)
+          })
+      })
     })
   })
   .then(() => cb())
