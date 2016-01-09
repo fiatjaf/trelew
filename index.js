@@ -172,10 +172,13 @@ function enterCard (card, cb) {
       })
 
     session.current.vcommands['comment'] = vorpal
-      .command('comment [text]', 'post a comment to this card')
-      .alias('post [text]')
+      .command('add comment [text...]', 'post a comment to this card')
+      .alias('comment')
       .action(function (args, cb) {
-        let newcomment = editInVim(args.text || '')
+        let newcomment = editInVim(args.text.join(' ') || '')
+        if (!newcomment.trim()) {
+          cb()
+        }
         this.log('\n' + helpers.md(newcomment) + '\n')
         this.prompt({
           type: 'confirm',
@@ -191,7 +194,6 @@ function enterCard (card, cb) {
 
     session.current.vcommands['comments'] = vorpal
       .command('comments', "list this card's comments.")
-      .alias('ls comments')
       .action(function (_, cb) {
         helpers.listComments.call(this)
         cb()
@@ -199,7 +201,6 @@ function enterCard (card, cb) {
 
     session.current.vcommands['checklists'] = vorpal
       .command('checklists', "show this card's checklists.")
-      .alias('ls checklists')
       .action(function (_, cb) {
         helpers.listChecklists.call(this)
         cb()
@@ -207,7 +208,6 @@ function enterCard (card, cb) {
 
     session.current.vcommands['attachments'] = vorpal
       .command('attachments', "show this card's attachments.")
-      .alias('ls attachments')
       .action(function (_, cb) {
         helpers.listAttachments.call(this)
         cb()
