@@ -3,6 +3,7 @@
 const editInVim = require('edit-in-vim')
 const promisify = require('tiny-promisify')
 const splitwords = require('split-words')
+const chalk = require('chalk')
 
 var config = require('./config')
 
@@ -166,7 +167,7 @@ function enterCard (card, cb) {
         }, res => {
           if (!res.confirm) return cb()
           Trello.putAsync(`/1/cards/${card.id}/desc`, {value: newdesc})
-          .then(() => cb())
+          .then(() => cb(chalk.bold('description edited!')))
           .catch(e => this.log(e.stack) && process.exit())
         })
       })
@@ -174,6 +175,7 @@ function enterCard (card, cb) {
     session.current.vcommands['comment'] = vorpal
       .command('add comment [text...]', 'post a comment to this card')
       .alias('comment')
+      .alias('post')
       .action(function (args, cb) {
         let newcomment = editInVim(args.text.join(' ') || '')
         if (!newcomment.trim()) {
@@ -187,7 +189,7 @@ function enterCard (card, cb) {
         }, res => {
           if (!res.confirm) return cb()
           Trello.postAsync(`/1/cards/${card.id}/actions/comments`, {text: newcomment})
-          .then(() => cb())
+          .then(() => cb(chalk.bold('comment posted!')))
           .catch(e => this.log(e.stack) && process.exit())
         })
       })
@@ -237,6 +239,31 @@ function enterList (list, cb) {
     }
 
     // add new commands
+    session.current.vcommands['add card'] = vorpal
+      .command('add card <name...>', 'create a new card on this list.')
+      .option('-t, --top', 'Put the card on the top of the list (default is bottom).')
+      .option('-d, --due [val]', 'Set a due date.')
+      .action(function (args, cb) {
+        let data = {
+          name: args.name.join(' '),
+          desc: editInVim(''),
+          pos: (args.options.top ? 'top' : 'bottom'),
+          idList: list.id,
+          due: (args.options.due ? (new Date(Date.parse(args.options.due))).toISOString() : null)
+        }
+        this.log('\n' + chalk.bold(data.name) + '\n' + helpers.md(data.desc) + '\n')
+        this.prompt({
+          type: 'confirm',
+          name: 'confirm',
+          message: 'Create this card?'
+        }, res => {
+          if (!res.confirm) return cb()
+          Trello.postAsync(`/1/cards`, data)
+          .then(() => cb(chalk.bold('card created!')))
+          .catch(e => this.log(e.stack) && process.exit())
+        })
+      })
+
     session.current.cards.forEach(card => {
       let slug = helpers.slug(card)
       session.current.vcommands[slug] = vorpal
