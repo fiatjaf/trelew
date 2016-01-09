@@ -23,3 +23,5 @@ After that, you can navigate between your boards, lists and cards just by typing
 Once in a card, type `ls` to read its descrition, `edit` to edit the description, `comments` to read the last comments, `comment` to add a new comment, `checklists` and `attachments` to see checklists and attachments.
 
 `cd ..` will go back to the previous level.
+
+`?` or `help` will show the available commands.

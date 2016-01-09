@@ -1,6 +1,6 @@
 'use strict'
 
-const slugify = require('slug')
+const slugify = require('slugg')
 const truncate = require('truncate')
 const pad = require('pad')
 const marked = require('marked')
