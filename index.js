@@ -240,7 +240,8 @@ function enterList (list, cb) {
     session.current.cards.forEach(card => {
       let slug = helpers.slug(card)
       session.current.vcommands[slug] = vorpal
-        .command(slug, `enters card '${card.name}'`)
+        .command(`card ${slug}`, `enters card '${card.name}'`)
+        .alias(slug)
         .action(function (_, cb) {
           session.current.entity.unshift(card)
           enterCard.call(this, card, cb)
@@ -289,7 +290,8 @@ function enterBoard (board, cb) {
     session.current.lists.forEach(list => {
       let slug = helpers.slug(list)
       session.current.vcommands[slug] = vorpal
-        .command(slug, `enters list '${slug}'`)
+        .command(`list ${slug}`, `enters list '${list.name}'`)
+        .alias(slug)
         .action(function (_, cb) {
           session.current.entity.unshift(list)
           enterList.call(this, list, cb)
@@ -298,7 +300,8 @@ function enterBoard (board, cb) {
       list.cards.forEach(card => {
         let slug = helpers.slug(card)
         session.current.vcommands[slug] = vorpal
-          .command(slug, `enters card '${slug}'`)
+          .command(`card ${slug}`, `enters card '${card.name}'`)
+          .alias(slug)
           .action(function () {
             session.current.entity.unshift(card)
             enterCard.call(this, card, cb)
@@ -337,7 +340,8 @@ function logged (cb) {
     session.current.boards.forEach(board => {
       let slug = helpers.slug(board)
       session.current.vcommands[slug] = vorpal
-        .command(slug, `enters board '${board.name}'`)
+        .command(`board ${slug}`, `enters board '${board.name}'`)
+        .alias(slug)
         .action(function (_, cb) {
           session.current.entity.unshift(board)
           enterBoard.call(this, board, cb)
