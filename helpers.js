@@ -46,7 +46,8 @@ marked.setOptions({
     paragraph: chalk.dim,
     listitem: chalk.dim,
     table: chalk.dim,
-    hr: chalk.green
+    hr: chalk.green,
+    reflowText: true
   })
 })
 let allEscapes = Object.keys(chalk.styles).map(c => chalk.styles[c].close).join('')

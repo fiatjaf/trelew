@@ -27,3 +27,5 @@ Once in a card, type `ls` to read its descrition, `edit` to edit the description
 `cd ..` will go back to the previous level.
 
 `?` or `help` will show the available commands.
+
+At any time you can do `ls | less` (or `comments | less`). This can be useful to read long descriptions or comments.
