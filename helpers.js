@@ -97,7 +97,7 @@ function listCards () {
 }
 
 function listComments () {
-  this.log('\nlast comments (top to bottom):\n' + session.current.comments.map(c => {
+  this.log('\nlast comments (top to bottom):\n' + session.current.comments.reverse().map(c => {
     return `${color3(c.memberCreator.username)} @ ${color2(c.date)}:\n  > ${md(c.data.text)}`
   }).join('\n'))
 }
