@@ -47,7 +47,7 @@ vorpal
       this.log(`For the first access, you will have to get an authorization token from Trello.
 Please go to
 
-    https://trello.com/1/connect?key=${config.devKey}&name=Trelew&response_type=token&expires=never&scope=read,write
+    https://trello.com/1/connect?key=${config.devKey}&name=${config.name}&response_type=token&expires=never&scope=read,write
 
 `)
       this.prompt({
@@ -117,7 +117,7 @@ vorpal
     cb()
   })
 
-module.exports = vorpal.delimiter(helpers.color('trelew') + '~$')
+module.exports = vorpal.delimiter(helpers.color(config.name) + '~$')
 
 function enterCard (card, cb) {
   this.delimiter('entering ' + card.name + '...')
@@ -343,6 +343,12 @@ function logged (cb) {
     board_lists: 'open',
     notifications: 'all',
     notifications_limit: 50
+  })
+  .catch(e => {
+    this.log('Invalid token: "' + Trello.token + '"')
+    config.store.set('token', undefined)
+    this.log(`Please start ${config.name} again and provide a valid token.`)
+    process.exit()
   })
   .then(res => {
     session.notifications = res.notifications.filter(d => d.unread)
