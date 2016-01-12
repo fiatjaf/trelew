@@ -18,6 +18,8 @@ sudo npm install trelew --global
 trelew
 ```
 
+![](screenshot.png)
+
 On the first run you'll be asked to generate a token.
 
 After that, you can navigate between your boards, lists and cards just by typing their name (just start typing and press TAB for autocompletion). For visualizing available options and information about current board/list/card, use `ls`.

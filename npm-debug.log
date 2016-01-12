@@ -1,0 +1,110 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'publish' ]
+2 info using npm@3.3.12
+3 info using node@v5.3.0
+4 verbose publish [ '.' ]
+5 silly cache add args [ '.', null ]
+6 verbose cache add spec .
+7 silly cache add parsed spec Result {
+7 silly cache add   raw: '.',
+7 silly cache add   scope: null,
+7 silly cache add   name: null,
+7 silly cache add   rawSpec: '.',
+7 silly cache add   spec: '/home/fiatjaf/comp/wft/trelew',
+7 silly cache add   type: 'directory' }
+8 verbose addLocalDirectory /home/fiatjaf/.npm/trelew/0.2.4/package.tgz not in flight; packing
+9 info lifecycle trelew@0.2.4~prepublish: trelew@0.2.4
+10 silly lifecycle trelew@0.2.4~prepublish: no script for prepublish, continuing
+11 verbose tar pack [ '/home/fiatjaf/.npm/trelew/0.2.4/package.tgz',
+11 verbose tar pack   '/home/fiatjaf/comp/wft/trelew' ]
+12 verbose tarball /home/fiatjaf/.npm/trelew/0.2.4/package.tgz
+13 verbose folder /home/fiatjaf/comp/wft/trelew
+14 verbose addLocalTarball adding from inside cache /home/fiatjaf/.npm/trelew/0.2.4/package.tgz
+15 silly cache afterAdd trelew@0.2.4
+16 verbose afterAdd /home/fiatjaf/.npm/trelew/0.2.4/package/package.json not in flight; writing
+17 verbose afterAdd /home/fiatjaf/.npm/trelew/0.2.4/package/package.json written
+18 silly publish { name: 'trelew',
+18 silly publish   version: '0.2.4',
+18 silly publish   description: 'An interactive command-line app for Trello.',
+18 silly publish   main: 'index.js',
+18 silly publish   engines: { node: '>= 4' },
+18 silly publish   bin: { trelew: 'bin/executable.js' },
+18 silly publish   scripts: { test: 'echo "Error: no test specified" && exit 1' },
+18 silly publish   author: { name: 'Giovanni T. Parra' },
+18 silly publish   license: 'MIT',
+18 silly publish   repository:
+18 silly publish    { type: 'git',
+18 silly publish      url: 'git+https://github.com/websitesfortrello/trelew.git' },
+18 silly publish   keywords: [ 'trello', 'cli', 'terminal', 'immersive', 'vorpal' ],
+18 silly publish   bugs: { url: 'https://github.com/websitesfortrello/trelew/issues' },
+18 silly publish   homepage: 'https://github.com/websitesfortrello/trelew#readme',
+18 silly publish   dependencies:
+18 silly publish    { chalk: '^1.1.1',
+18 silly publish      'edit-in-vim': '^0.1.0',
+18 silly publish      'file-store-sync': '^0.1.0',
+18 silly publish      marked: '^0.3.5',
+18 silly publish      'marked-terminal': '^1.6.1',
+18 silly publish      mkdirp: '^0.5.1',
+18 silly publish      'node-trello': '^1.1.2',
+18 silly publish      pad: '^1.0.0',
+18 silly publish      'relative-date': '^1.1.2',
+18 silly publish      slugg: '^0.1.2',
+18 silly publish      'tiny-promisify': '^0.1.0',
+18 silly publish      truncate: '^2.0.0',
+18 silly publish      vorpal: 'github:dthree/vorpal',
+18 silly publish      'vorpal-less': '0.0.11' },
+18 silly publish   readme: '# trelew\n\n![](trelew.jpg)\n\n### An immersive command line app for Trello\n\n_Nodejs 4 is required. If yours is below that, please follow instructions [here](http://stackoverflow.com/a/10076029/973380) to upgrade._\n\n## Install\n\n```\nsudo npm install trelew --global\n```\n\n## Run\n\n```\ntrelew\n```\n\n![](screenshot.png)\n\nOn the first run you\'ll be asked to generate a token.\n\nAfter that, you can navigate between your boards, lists and cards just by typing their name (just start typing and press TAB for autocompletion). For visualizing available options and information about current board/list/card, use `ls`.\n\nOnce in a list, use `add card` to create a new card.\n\nOnce in a card, use `ls` to read its descrition, `edit` to edit the description, `comments` to read the last comments, `add comment` or `post` to add a new comment, `checklists` and `attachments` to see checklists and attachments.\n\n`cd ..` will go back to the previous level.\n\n`?` or `help` will show the available commands.\n\nAt any time you can do `ls | less` (or `comments | less`). This can be useful to read long descriptions or comments.\n',
+18 silly publish   readmeFilename: 'README.md',
+18 silly publish   gitHead: 'c2c1fe51d23acce5e530f91f0f22d11c578e0813',
+18 silly publish   _id: 'trelew@0.2.4',
+18 silly publish   _shasum: 'ae80ab9bcd2d8e9c3612c6318fa6539e17237b0f',
+18 silly publish   _from: '.' }
+19 verbose getPublishConfig undefined
+20 silly mapToRegistry name trelew
+21 silly mapToRegistry using default registry
+22 silly mapToRegistry registry https://registry.npmjs.org/
+23 silly mapToRegistry uri https://registry.npmjs.org/trelew
+24 verbose publish registryBase https://registry.npmjs.org/
+25 silly publish uploading /home/fiatjaf/.npm/trelew/0.2.4/package.tgz
+26 verbose request uri https://registry.npmjs.org/trelew
+27 verbose request sending authorization for write operation
+28 info attempt registry request try #1 at 5:50:13 PM
+29 verbose request id 861282595244bf5a
+30 http request PUT https://registry.npmjs.org/trelew
+31 http 403 https://registry.npmjs.org/trelew
+32 verbose headers { 'content-type': 'application/json',
+32 verbose headers   'cache-control': 'max-age=300',
+32 verbose headers   'content-length': '95',
+32 verbose headers   'accept-ranges': 'bytes',
+32 verbose headers   date: 'Tue, 12 Jan 2016 22:50:15 GMT',
+32 verbose headers   via: '1.1 varnish',
+32 verbose headers   connection: 'keep-alive',
+32 verbose headers   'x-served-by': 'cache-iad2142-IAD',
+32 verbose headers   'x-cache': 'MISS',
+32 verbose headers   'x-cache-hits': '0',
+32 verbose headers   'x-timer': 'S1452639013.776106,VS0,VE1432' }
+33 verbose request invalidating /home/fiatjaf/.npm/registry.npmjs.org/trelew on PUT
+34 error publish Failed PUT 403
+35 verbose stack Error: "You cannot publish over the previously published version 0.2.4." : trelew
+35 verbose stack     at makeError (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:264:12)
+35 verbose stack     at CachingRegistryClient.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:252:14)
+35 verbose stack     at Request._callback (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:172:14)
+35 verbose stack     at Request.self.callback (/usr/local/lib/node_modules/npm/node_modules/request/request.js:198:22)
+35 verbose stack     at emitTwo (events.js:87:13)
+35 verbose stack     at Request.emit (events.js:172:7)
+35 verbose stack     at Request.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1082:10)
+35 verbose stack     at emitOne (events.js:82:20)
+35 verbose stack     at Request.emit (events.js:169:7)
+35 verbose stack     at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1009:12)
+36 verbose statusCode 403
+37 verbose pkgid trelew
+38 verbose cwd /home/fiatjaf/comp/wft/trelew
+39 error Linux 3.11.0-12-generic
+40 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "publish"
+41 error node v5.3.0
+42 error npm  v3.3.12
+43 error code E403
+44 error "You cannot publish over the previously published version 0.2.4." : trelew
+45 error If you need help, you may report this error at:
+45 error     <https://github.com/npm/npm/issues>
+46 verbose exit [ 1, true ]
