@@ -2,7 +2,6 @@
 
 const editInVim = require('edit-in-vim')
 const promisify = require('tiny-promisify')
-const splitwords = require('split-words')
 const chalk = require('chalk')
 
 var config = require('./config')
@@ -22,6 +21,7 @@ var session = module.exports.session = {
     'boards': [],
     'lists': [],
     'cards': [],
+    'card': {},
     'checklists': [],
     'comments': [],
     'attachments': []
@@ -105,14 +105,7 @@ vorpal
         helpers.listCards.call(this)
         break
       case 'card':
-        let card = session.current.entity[0]
-        this.log(`card '${card.name}' ${card.due ? '(' + card.due.split('.')[0] + ')' : ''}`)
-        this.log(helpers.md('---'))
-        this.log(`${helpers.md(card.desc)}`)
-        this.log(helpers.md('---'))
-        this.log(helpers.color2(session.current.comments.length) + ' comments')
-        this.log(helpers.color2(session.current.checklists.length) + ' checklists')
-        this.log(helpers.color2(session.current.attachments.length) + ' attachments')
+        helpers.cardInfo.call(this)
     }
     cb()
   })
@@ -138,11 +131,7 @@ function enterCard (card, cb) {
     session.current.comments = res.actions
     session.current.attachments = res.attachments
     session.current.checklists = res.checklists
-    this.log(`card '${card.name}' ${card.due ? '(' + card.due.split('.')[0] + ')' : ''}`)
-    this.log(helpers.color2(splitwords(card.desc).length) + ' words in description')
-    this.log(helpers.color2(session.current.comments.length) + ' comments')
-    this.log(helpers.color2(session.current.checklists.length) + ' checklists')
-    this.log(helpers.color2(session.current.attachments.length) + ' attachments')
+    session.current.card = card
   })
   .then(() => {
     // clean old commands
@@ -190,6 +179,13 @@ function enterCard (card, cb) {
         })
       })
 
+    session.current.vcommands['desc'] = vorpal
+      .command('desc', "show this card's description.")
+      .action(function (_, cb) {
+        this.log('\n' + helpers.md(session.current.card.desc) + '\n')
+        cb()
+      })
+
     session.current.vcommands['comments'] = vorpal
       .command('comments', "list this card's comments.")
       .action(function (_, cb) {
@@ -211,6 +207,20 @@ function enterCard (card, cb) {
         cb()
       })
   })
+  .then(() => {
+    this.log(`entered card '${card.name}' ${card.due ? '(' + card.due.split('.')[0] + ')' : ''}`)
+    helpers.cardInfo.call(this)
+    this.log(`
+type
+'desc' to read this card's description ('desc | less' for long descriptions);
+'edit' to edit and replace the description;
+'comments' to read comments ('comments | less' for long comments);
+'post' to write a new comment;
+'checklists' to see checklists in this card;
+'attachments' to see attachments in this card;
+'ls' to show card information again; or
+'cd ..' to go back to previous view.`)
+  })
   .then(() => cb())
   .catch(e => this.log(e.stack) && process.exit())
 }
@@ -225,7 +235,6 @@ function enterList (list, cb) {
   .then(res => {
     vorpal.delimiter(helpers.color(helpers.slug(list)) + '~$')
     session.current.cards = res.cards
-    helpers.listCards.call(this)
   })
   .then(() => {
     // clean old commands
@@ -271,6 +280,15 @@ function enterList (list, cb) {
         })
     })
   })
+  .then(() => {
+    this.log(`entered list ${list.name}`)
+    helpers.listCards.call(this)
+    this.log(`\n
+type the name of a card to enter it;
+'add card' to add a card;
+'ls' to list cards again; or
+'cd ..' to go back to board view.`)
+  })
   .then(() => cb())
   .catch(e => this.log(e.stack) && process.exit())
 }
@@ -297,7 +315,6 @@ function enterBoard (board, cb) {
       })
     })
     session.current.lists = res.lists
-    helpers.listLists.call(this)
   })
   .then(() => {
     // clean old commands
@@ -328,6 +345,15 @@ function enterBoard (board, cb) {
           })
       })
     })
+  })
+  .then(() => {
+    this.log(`entered board ${board.name}`)
+    helpers.listLists.call(this)
+    this.log(`\n
+type the name of a list to enter it;
+type the name of a card to enter it;
+'ls' to list lists again; or
+'cd ..' to go back to board selection`)
   })
   .then(() => cb())
   .catch(e => this.log(e.stack) && process.exit())
@@ -377,9 +403,12 @@ function logged (cb) {
     })
   })
   .then(() => {
+    let authCommand = vorpal.find('auth')
+    if (authCommand) authCommand.remove()
     vorpal.delimiter(helpers.color(session.user.username + '@trello') + '~$')
     this.log(`connected as ${session.user.username}`)
     helpers.listBoards.call(this)
+    this.log(`\ntype the name of a board to enter it or 'ls' to list them again.`)
     cb()
   })
   .catch(e => this.log(e.stack) && process.exit())

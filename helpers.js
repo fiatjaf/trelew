@@ -12,6 +12,7 @@ module.exports = {
   listBoards,
   listLists,
   listCards,
+  cardInfo,
   listComments,
   listChecklists,
   listAttachments,
@@ -21,7 +22,6 @@ module.exports = {
   color,
   color2,
   color3,
-  line,
   truncate
 }
 
@@ -30,10 +30,6 @@ var session = require('.').session
 let allEscapes = Object.keys(chalk.styles).map(c => chalk.styles[c].close).join('')
 function truncate (text, number) {
   return tru(text, number) + allEscapes
-}
-
-function line () {
-  return '\n' + md('---') + '\n'
 }
 
 function color3 (text) {
@@ -122,6 +118,14 @@ function listCards () {
       return ` ${color3('-')} ${name} (due ${b.due.split('.')[0]}) > "${color2(truncate(md(b.desc), 20)).replace(/[\n\r]/g, ' ')}"`
     }
   }).join('\n'))
+}
+
+function cardInfo () {
+  this.log('\n' + truncate(md(session.current.card.desc), 200))
+  this.log(chalk.green('\n\n---\n\n'))
+  this.log(color2(session.current.comments.length) + ' comments')
+  this.log(color2(session.current.checklists.length) + ' checklists')
+  this.log(color2(session.current.attachments.length) + ' attachments')
 }
 
 function listComments () {

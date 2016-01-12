@@ -40,7 +40,6 @@
     "pad": "^1.0.0",
     "relative-date": "^1.1.2",
     "slugg": "^0.1.2",
-    "split-words": "^1.0.2",
     "tiny-promisify": "^0.1.0",
     "truncate": "^2.0.0",
     "vorpal": "dthree/vorpal",
