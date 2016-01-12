@@ -212,14 +212,14 @@ function enterCard (card, cb) {
     helpers.cardInfo.call(this)
     this.log(`
 type
-'desc' to read this card's description ('desc | less' for long descriptions);
-'edit' to edit and replace the description;
-'comments' to read comments ('comments | less' for long comments);
-'post' to write a new comment;
-'checklists' to see checklists in this card;
-'attachments' to see attachments in this card;
-'ls' to show card information again; or
-'cd ..' to go back to previous view.`)
+'${chalk.underline('desc')}' to read this card's description ('${chalk.underline('desc | less')}' for long descriptions);
+'${chalk.underline('edit')}' to edit and replace the description;
+'${chalk.underline('comments')}' to read comments ('${chalk.underline('comments | less')}' for long comments);
+'${chalk.underline('post')}' to write a new comment;
+'${chalk.underline('checklists')}' to see checklists in this card;
+'${chalk.underline('attachments')}' to see attachments in this card;
+'${chalk.underline('ls')}' to show card information again; or
+'${chalk.underline('cd ..')}' to go back to previous view.`)
   })
   .then(() => cb())
   .catch(e => this.log(e.stack) && process.exit())
@@ -285,9 +285,9 @@ function enterList (list, cb) {
     helpers.listCards.call(this)
     this.log(`\n
 type the name of a card to enter it;
-'add card' to add a card;
-'ls' to list cards again; or
-'cd ..' to go back to board view.`)
+'${chalk.underline('add card')}' to add a card;
+'${chalk.underline('ls')}' to list cards again; or
+'${chalk.underline('cd ..')}' to go back to board view.`)
   })
   .then(() => cb())
   .catch(e => this.log(e.stack) && process.exit())
@@ -352,8 +352,8 @@ function enterBoard (board, cb) {
     this.log(`\n
 type the name of a list to enter it;
 type the name of a card to enter it;
-'ls' to list lists again; or
-'cd ..' to go back to board selection`)
+'${chalk.underline('ls')}' to list lists again; or
+'${chalk.underline('cd ..')}' to go back to board selection`)
   })
   .then(() => cb())
   .catch(e => this.log(e.stack) && process.exit())
@@ -408,7 +408,9 @@ function logged (cb) {
     vorpal.delimiter(helpers.color(session.user.username + '@trello') + '~$')
     this.log(`connected as ${session.user.username}`)
     helpers.listBoards.call(this)
-    this.log(`\ntype the name of a board to enter it or 'ls' to list them again.`)
+    this.log(`
+type the name of a board to enter it;
+or '${chalk.underline('ls')}' to list them again.`)
     cb()
   })
   .catch(e => this.log(e.stack) && process.exit())
