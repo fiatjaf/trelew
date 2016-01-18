@@ -34,6 +34,10 @@ const vorpal = require('vorpal')()
 vorpal
   .use('vorpal-less')
 
+/* changing default commands */
+vorpal.find('help').alias('?')
+vorpal.find('exit').description(`Exits ${config.name}.`)
+
 vorpal
   .command('auth')
   .option('-t, --token [val]', `Trello API token for key ${config.devKey}`)
