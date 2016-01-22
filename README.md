@@ -9,7 +9,7 @@ _Nodejs 4 is required. If yours is below that, please follow instructions [here]
 ## Install
 
 ```
-sudo npm install trelew --global
+npm install trelew --global
 ```
 
 ## Run
