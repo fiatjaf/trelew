@@ -98,7 +98,7 @@ function listBoards () {
     let nmembers = b.memberships.length
     let nlists = b.lists.length
     let last = relativeDate(Date.parse(b.dateLastActivity))
-    return ` ${color3('-')} ${truncate(pad(b.name, 40), 40)} ${color3(pad(last, 15))} ${pad(2, nmembers)} ${color2('members')} ${pad(2, nlists)} ${color2('lists')}`
+    return ` ${color3('-')} ${truncate(pad(b.name, 40), 40)} ${color3(pad(last || '', 15))} ${pad(2, nmembers)} ${color2('members')} ${pad(2, nlists)} ${color2('lists')}`
   }).join('\n'))
 }
 
