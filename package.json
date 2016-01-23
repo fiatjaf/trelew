@@ -1,6 +1,6 @@
 {
   "name": "trelew",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "An interactive command-line app for Trello.",
   "main": "index.js",
   "engines": {
@@ -42,7 +42,7 @@
     "slugg": "^0.1.2",
     "tiny-promisify": "^0.1.0",
     "truncate": "^2.0.0",
-    "vorpal": "dthree/vorpal",
+    "vorpal": "^1.5.8",
     "vorpal-less": "0.0.11"
   }
 }
