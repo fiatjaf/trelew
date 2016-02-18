@@ -12,9 +12,9 @@ var cli = require('..')
 setTimeout(function () {
   if (cli.find('auth')) {
     cli.exec('auth')
+      .then(() => cli.parse(process.argv))
   }
 }, 200)
 
 cli
   .show()
-  .parse(process.argv)

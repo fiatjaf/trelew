@@ -33,3 +33,5 @@ Once in a card, use `ls` to read its descrition, `edit` to edit the description,
 `?` or `help` will show the available commands.
 
 At any time you can do `ls | less` (or `comments | less`). This can be useful to read long descriptions or comments.
+
+You can also start trelew directly inside some board. Just start it with `trelew slug-of-the-board`.
