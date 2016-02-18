@@ -146,11 +146,34 @@ function enterCard (card, cb) {
     }
 
     // add new commands
+    global.session.current.vcommands['rename'] = vorpal
+      .command('rename [text...]', 'rename this card')
+      .alias('rename card')
+      .action(function (args, cb) {
+        let newname = editInVim((args.text || []).join('') || card.name)
+        if (!newname) return cb('Not renamed.')
+
+        this.log('\n' + helpers.md(newname))
+        this.prompt({
+          type: 'confirm',
+          name: 'confirm',
+          message: 'Are you really sure you want to replace the current name with the one you just wrote?'
+        }, res => {
+          if (!res.confirm) return cb()
+          Trello.putAsync(`/1/cards/${card.id}/name`, {value: newname})
+          .then(() => this.log(chalk.bold('renamed!')))
+          .then(updateCard.bind(this, card))
+          .then(cb)
+          .catch(e => this.log(e.stack) && process.exit())
+        })
+      })
+
     global.session.current.vcommands['edit'] = vorpal
-      .command('edit', "edit this card's description.")
-      .action(function (_, cb) {
-        let newdesc = editInVim(card.desc)
-        this.log('\n' + helpers.md(newdesc) + '\n')
+      .command('edit [text...]', "edit this card's description.")
+      .alias('edit desc')
+      .action(function (args, cb) {
+        let newdesc = editInVim((card.desc || '') + (args.text || []).join(''))
+        this.log('\n' + helpers.md(newdesc))
         this.prompt({
           type: 'confirm',
           name: 'confirm',
@@ -166,15 +189,15 @@ function enterCard (card, cb) {
       })
 
     global.session.current.vcommands['comment'] = vorpal
-      .command('add comment [text...]', 'post a comment to this card')
-      .alias('post')
+      .command('post [text...]', 'post a comment to this card')
+      .alias('add comment')
       .alias('comment')
       .action(function (args, cb) {
         let newcomment = editInVim((args.text || []).join(' ') || '')
         if (!newcomment.trim()) {
           cb()
         }
-        this.log('\n' + helpers.md(newcomment) + '\n')
+        this.log('\n' + helpers.md(newcomment))
         this.prompt({
           type: 'confirm',
           name: 'confirm',
@@ -192,7 +215,7 @@ function enterCard (card, cb) {
     global.session.current.vcommands['desc'] = vorpal
       .command('desc', "show this card's description.")
       .action(function (_, cb) {
-        this.log('\n' + helpers.md(global.session.current.card.desc) + '\n')
+        this.log('\n' + helpers.md(global.session.current.card.desc))
         cb()
       })
 
@@ -301,7 +324,7 @@ function enterList (list, cb) {
           idList: list.id,
           due: (args.options.due ? (new Date(Date.parse(args.options.due))).toISOString() : null)
         }
-        this.log('\n' + chalk.bold(data.name) + '\n' + helpers.md(data.desc) + '\n')
+        this.log('\n' + chalk.bold(data.name) + '\n' + helpers.md(data.desc))
         this.prompt({
           type: 'confirm',
           name: 'confirm',
