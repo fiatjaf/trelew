@@ -12,7 +12,7 @@ Trello.putAsync = promisify(Trello.put, {context: Trello})
 Trello.postAsync = promisify(Trello.post, {context: Trello})
 Trello.delAsync = promisify(Trello.del, {context: Trello})
 
-var session = module.exports.session = {
+global.session = module.exports.session = {
   'user': null,
   'notifications': null,
   'current': {
@@ -73,8 +73,8 @@ vorpal
       return cb() // only support '..' for now
     }
 
-    session.current.entity.shift()
-    let entity = session.current.entity[0]
+    global.session.current.entity.shift()
+    let entity = global.session.current.entity[0]
     let level = helpers.currentLevel()
     switch (level) {
       case 'card':
@@ -132,20 +132,20 @@ function enterCard (card, cb) {
   })
   .then(res => {
     vorpal.delimiter(helpers.color(helpers.slug(card)) + '~$')
-    session.current.comments = res.actions
-    session.current.attachments = res.attachments
-    session.current.checklists = res.checklists
-    session.current.card = card
+    global.session.current.comments = res.actions
+    global.session.current.attachments = res.attachments
+    global.session.current.checklists = res.checklists
+    global.session.current.card = card
   })
   .then(() => {
     // clean old commands
-    for (var k in session.current.vcommands) {
-      session.current.vcommands[k].remove()
-      delete session.current.vcommands[k]
+    for (var k in global.session.current.vcommands) {
+      global.session.current.vcommands[k].remove()
+      delete global.session.current.vcommands[k]
     }
 
     // add new commands
-    session.current.vcommands['edit'] = vorpal
+    global.session.current.vcommands['edit'] = vorpal
       .command('edit', "edit this card's description.")
       .action(function (_, cb) {
         let newdesc = editInVim(card.desc)
@@ -157,14 +157,17 @@ function enterCard (card, cb) {
         }, res => {
           if (!res.confirm) return cb()
           Trello.putAsync(`/1/cards/${card.id}/desc`, {value: newdesc})
-          .then(() => cb(chalk.bold('description edited!')))
+          .then(() => this.log(chalk.bold('description edited!')))
+          .then(updateCard.bind(this, card))
+          .then(cb)
           .catch(e => this.log(e.stack) && process.exit())
         })
       })
 
-    session.current.vcommands['comment'] = vorpal
+    global.session.current.vcommands['comment'] = vorpal
       .command('add comment [text...]', 'post a comment to this card')
       .alias('post')
+      .alias('comment')
       .action(function (args, cb) {
         let newcomment = editInVim((args.text || []).join(' ') || '')
         if (!newcomment.trim()) {
@@ -178,33 +181,35 @@ function enterCard (card, cb) {
         }, res => {
           if (!res.confirm) return cb()
           Trello.postAsync(`/1/cards/${card.id}/actions/comments`, {text: newcomment})
-          .then(() => cb(chalk.bold('comment posted!')))
+          .then(() => this.log(chalk.bold('comment posted!')))
+          .then(updateCard.bind(this, card))
+          .then(cb)
           .catch(e => this.log(e.stack) && process.exit())
         })
       })
 
-    session.current.vcommands['desc'] = vorpal
+    global.session.current.vcommands['desc'] = vorpal
       .command('desc', "show this card's description.")
       .action(function (_, cb) {
-        this.log('\n' + helpers.md(session.current.card.desc) + '\n')
+        this.log('\n' + helpers.md(global.session.current.card.desc) + '\n')
         cb()
       })
 
-    session.current.vcommands['comments'] = vorpal
+    global.session.current.vcommands['comments'] = vorpal
       .command('comments', "list this card's comments.")
       .action(function (_, cb) {
         helpers.listComments.call(this)
         cb()
       })
 
-    session.current.vcommands['checklists'] = vorpal
+    global.session.current.vcommands['checklists'] = vorpal
       .command('checklists', "show this card's checklists.")
       .action(function (_, cb) {
         helpers.listChecklists.call(this)
         cb()
       })
 
-    session.current.vcommands['attachments'] = vorpal
+    global.session.current.vcommands['attachments'] = vorpal
       .command('attachments', "show this card's attachments.")
       .action(function (_, cb) {
         helpers.listAttachments.call(this)
@@ -229,6 +234,41 @@ type
   .catch(e => this.log(e.stack) && process.exit())
 }
 
+function updateCard (card) {
+  return Trello.getAsync(`/1/cards/${card.id}`, {
+    fields: 'name,desc,due',
+    actions: 'commentCard,copyCommentCard',
+    actions_limit: 5,
+    actions_entities: 'true',
+    action_memberCreator_fields: 'username',
+    attachments: 'true',
+    attachment_fields: 'name,url',
+    checklists: 'all',
+    checkItemStates: 'true',
+    checklist_fields: 'name'
+  })
+  .then(res => {
+    global.session.current.card.desc = res.desc
+    global.session.current.card.due = res.due
+    global.session.current.card.name = res.name
+    global.session.current.comments = res.actions
+    global.session.current.attachments = res.attachments
+    global.session.current.checklists = res.checklists
+    global.session.current.card = card
+  })
+}
+
+function updateList (list) {
+  return Trello.getAsync(`/1/lists/${list.id}`, {
+    fields: 'id',
+    cards: 'open',
+    card_fields: 'name,desc,due'
+  })
+  .then(res => {
+    global.session.current.cards = res.cards
+  })
+}
+
 function enterList (list, cb) {
   this.delimiter('entering ' + list.name + '...')
   return Trello.getAsync(`/1/lists/${list.id}`, {
@@ -238,17 +278,17 @@ function enterList (list, cb) {
   })
   .then(res => {
     vorpal.delimiter(helpers.color(helpers.slug(list)) + '~$')
-    session.current.cards = res.cards
+    global.session.current.cards = res.cards
   })
   .then(() => {
     // clean old commands
-    for (var k in session.current.vcommands) {
-      session.current.vcommands[k].remove()
-      delete session.current.vcommands[k]
+    for (var k in global.session.current.vcommands) {
+      global.session.current.vcommands[k].remove()
+      delete global.session.current.vcommands[k]
     }
 
     // add new commands
-    session.current.vcommands['add card'] = vorpal
+    global.session.current.vcommands['add card'] = vorpal
       .command('add card <name...>', 'create a new card on this list.')
       .option('-t, --top', 'Put the card on the top of the list (default is bottom).')
       .option('-d, --due [val]', 'Set a due date.')
@@ -268,18 +308,20 @@ function enterList (list, cb) {
         }, res => {
           if (!res.confirm) return cb()
           Trello.postAsync(`/1/cards`, data)
-          .then(() => cb(chalk.bold('card created!')))
+          .then(() => this.log(chalk.bold('card created!')))
+          .then(updateList.bind(this, list))
+          .then(cb)
           .catch(e => this.log(e.stack) && process.exit())
         })
       })
 
-    session.current.cards.forEach(card => {
+    global.session.current.cards.forEach(card => {
       let slug = helpers.slug(card)
-      session.current.vcommands[slug] = vorpal
+      global.session.current.vcommands[slug] = vorpal
         .command(`card ${slug}`, `enters card '${card.name}'`)
         .alias(slug)
         .action(function (_, cb) {
-          session.current.entity.unshift(card)
+          global.session.current.entity.unshift(card)
           enterCard.call(this, card, cb)
         })
     })
@@ -318,33 +360,33 @@ function enterBoard (board, cb) {
         }
       })
     })
-    session.current.lists = res.lists
+    global.session.current.lists = res.lists
   })
   .then(() => {
     // clean old commands
-    for (var k in session.current.vcommands) {
-      session.current.vcommands[k].remove()
-      delete session.current.vcommands[k]
+    for (var k in global.session.current.vcommands) {
+      global.session.current.vcommands[k].remove()
+      delete global.session.current.vcommands[k]
     }
 
     // add new commands
-    session.current.lists.forEach(list => {
+    global.session.current.lists.forEach(list => {
       let slug = helpers.slug(list)
-      session.current.vcommands[slug] = vorpal
+      global.session.current.vcommands[slug] = vorpal
         .command(`list ${slug}`, `enters list '${list.name}'`)
         .alias(slug)
         .action(function (_, cb) {
-          session.current.entity.unshift(list)
+          global.session.current.entity.unshift(list)
           enterList.call(this, list, cb)
         })
 
       list.cards.forEach(card => {
         let slug = helpers.slug(card)
-        session.current.vcommands[slug] = vorpal
+        global.session.current.vcommands[slug] = vorpal
           .command(`card ${slug}`, `enters card '${card.name}'`)
           .alias(slug)
           .action(function () {
-            session.current.entity.unshift(card)
+            global.session.current.entity.unshift(card)
             enterCard.call(this, card, cb)
           })
       })
@@ -381,27 +423,27 @@ function logged (cb) {
     process.exit()
   })
   .then(res => {
-    session.notifications = res.notifications.filter(d => d.unread)
+    global.session.notifications = res.notifications.filter(d => d.unread)
     delete res.notifications
-    session.current.boards = res.boards
+    global.session.current.boards = res.boards
     delete res.boards
-    session.user = res
+    global.session.user = res
   })
   .then(() => {
     // clean old commands
-    for (var k in session.current.vcommands) {
-      session.current.vcommands[k].remove()
-      delete session.current.vcommands[k]
+    for (var k in global.session.current.vcommands) {
+      global.session.current.vcommands[k].remove()
+      delete global.session.current.vcommands[k]
     }
 
     // add new commands
-    session.current.boards.forEach(board => {
+    global.session.current.boards.forEach(board => {
       let slug = helpers.slug(board)
-      session.current.vcommands[slug] = vorpal
+      global.session.current.vcommands[slug] = vorpal
         .command(`board ${slug}`, `enters board '${board.name}'`)
         .alias(slug)
         .action(function (_, cb) {
-          session.current.entity.unshift(board)
+          global.session.current.entity.unshift(board)
           enterBoard.call(this, board, cb)
         })
     })
@@ -409,8 +451,8 @@ function logged (cb) {
   .then(() => {
     let authCommand = vorpal.find('auth')
     if (authCommand) authCommand.remove()
-    vorpal.delimiter(helpers.color(session.user.username + '@trello') + '~$')
-    this.log(`connected as ${session.user.username}`)
+    vorpal.delimiter(helpers.color(global.session.user.username + '@trello') + '~$')
+    this.log(`connected as ${global.session.user.username}`)
     helpers.listBoards.call(this)
     this.log(`
 type the name of a board to enter it;
