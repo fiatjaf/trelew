@@ -33,6 +33,7 @@ const helpers = require('./helpers')
 const vorpal = require('vorpal')()
 vorpal
   .use('vorpal-less')
+  .use('vorpal-repl')
 
 /* changing default commands */
 vorpal.find('help').alias('?')
