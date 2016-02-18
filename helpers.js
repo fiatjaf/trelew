@@ -121,8 +121,8 @@ function listCards () {
 }
 
 function cardInfo () {
-  this.log('\n' + truncate(md(session.current.card.desc), 200))
-  this.log(chalk.green('\n\n---\n\n'))
+  this.log('\n' + color2(session.current.card.name) + truncate(md(session.current.card.desc), 200))
+  this.log(chalk.green('---\n'))
   this.log(color2(session.current.comments.length) + ' comments')
   this.log(color2(session.current.checklists.length) + ' checklists')
   this.log(color2(session.current.attachments.length) + ' attachments')
