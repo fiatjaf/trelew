@@ -9,6 +9,9 @@ const TerminalRenderer = require('marked-terminal')
 const chalk = require('chalk')
 
 module.exports = {
+  promptBoards,
+  promptLists,
+  promptCards,
   listBoards,
   listLists,
   listCards,
@@ -70,27 +73,35 @@ function currentLevel () {
   return 'auth'
 }
 
-var slugsCache = {}
-var slugsMade = {}
 function slug (entity) {
-  var s = slugsCache[entity.name]
-  if (s) {
-    return s
-  }
+  return slugify(entity.name).slice(0, 26) || "unnamed"
+}
 
-  s = slugify(entity.name).slice(0, 26)
-  if (!s) {
-    s = '--unnamed--0'
-  }
+function promptBoards(boards) {
+  return boards.map((b, i) => {
+      let nmembers = b.memberships.length
+      let nlists = b.lists.length
+      let last = relativeDate(Date.parse(b.dateLastActivity))
+      return `${color3(i + 1 + ': ')} ${truncate(pad(b.name, 40), 40)} ${color3(pad(last || '', 15))} ${pad(2, nmembers)} ${color2('members')} ${pad(2, nlists)} ${color2('lists')}`
+    }).join("\n") +  "\n\nWhich One: "
+}
 
-  var i = 1
-  while (s in slugsMade) {
-    s = s.slice(0, -1) + i
-    i++
-  }
-  slugsMade[s] = true
-  slugsCache[entity.name] = s
-  return s
+function promptLists(lists) {
+  return lists.map((b, i) => {
+    let cards = b.cards.map(c => color3(truncate(c.name, 10))).slice(0, 6).join(', ')
+    return `${color3(i + 1 + ": ")} ${truncate(pad(b.name, 28), 28)}: [${cards}]`
+  }).join('\n') + "\n\nWhich One: "
+}
+
+function promptCards(cards) {
+  return cards.map((b, i) => {
+    let name = truncate(pad(b.name, 37), 37)
+    if (!b.due) {
+      return `${color3(i + 1 + ": ")} ${name} > "${color2(truncate(md(b.desc), 44)).replace(/[\n\r]/g, ' ')}"`
+    } else {
+      return `${color3(i + 1 + ": ")} ${name} (due ${b.due.split('.')[0]}) > "${color2(truncate(md(b.desc), 20)).replace(/[\n\r]/g, ' ')}"`
+    }
+  }).join('\n') + "\n\nWhich One: "
 }
 
 function listBoards () {

@@ -339,16 +339,10 @@ function enterList (list, cb) {
         })
       })
 
-    global.session.current.cards.forEach(card => {
-      let slug = helpers.slug(card)
-      global.session.current.vcommands[slug] = vorpal
-        .command(`card ${slug}`, `enters card '${card.name}'`)
-        .alias(slug)
-        .action(function (_, cb) {
-          global.session.current.entity.unshift(card)
-          enterCard.call(this, card, cb)
-        })
-    })
+    registerVCommands("card", global.session.current.cards, helpers.promptCards, function(_, cb, card) {
+      global.session.current.entity.unshift(card)
+      enterCard.call(this, card, cb)
+    }.bind(this))
   })
   .then(() => {
     this.log(`entered list ${list.name}`)
@@ -394,27 +388,10 @@ function enterBoard (board, cb) {
     }
 
     // add new commands
-    global.session.current.lists.forEach(list => {
-      let slug = helpers.slug(list)
-      global.session.current.vcommands[slug] = vorpal
-        .command(`list ${slug}`, `enters list '${list.name}'`)
-        .alias(slug)
-        .action(function (_, cb) {
-          global.session.current.entity.unshift(list)
-          enterList.call(this, list, cb)
-        })
-
-      list.cards.forEach(card => {
-        let slug = helpers.slug(card)
-        global.session.current.vcommands[slug] = vorpal
-          .command(`card ${slug}`, `enters card '${card.name}'`)
-          .alias(slug)
-          .action(function () {
-            global.session.current.entity.unshift(card)
-            enterCard.call(this, card, cb)
-          })
-      })
-    })
+    registerVCommands("list", global.session.current.lists, helpers.promptLists, function (_, cb, list) {
+      global.session.current.entity.unshift(list)
+      enterList.call(this, list, cb)
+    }.bind(this))
   })
   .then(() => {
     this.log(`entered board ${board.name}`)
@@ -461,16 +438,10 @@ function logged (cb) {
     }
 
     // add new commands
-    global.session.current.boards.forEach(board => {
-      let slug = helpers.slug(board)
-      global.session.current.vcommands[slug] = vorpal
-        .command(`board ${slug}`, `enters board '${board.name}'`)
-        .alias(slug)
-        .action(function (_, cb) {
-          global.session.current.entity.unshift(board)
-          enterBoard.call(this, board, cb)
-        })
-    })
+    registerVCommands("board", global.session.current.boards, helpers.promptBoards, function(_, cb, board) {
+      global.session.current.entity.unshift(board)
+      enterBoard.call(this, board, cb)
+    }.bind(this))
   })
   .then(() => {
     let authCommand = vorpal.find('auth')
@@ -484,4 +455,49 @@ or '${chalk.underline('ls')}' to list them again.`)
     cb()
   })
   .catch(e => this.log(e.stack) && process.exit())
+}
+
+function registerVCommands(type, entitites, promptMessage, callback) {
+  entitites.forEach(entity => {
+    let slug = helpers.slug(entity)
+    let vcommands = global.session.current.vcommands
+    let currentCommand
+
+
+    if (vcommands.hasOwnProperty(slug)) {
+      currentCommand = vcommands[slug]
+      currentCommand.entitites.push(entity)
+
+      let count = currentCommand.entitites.length
+      let message;
+
+      if (typeof promptMessage == 'function') {
+        message = promptMessage(currentCommand.entitites)
+      } else {
+        message = promptMessage
+      }
+
+      currentCommand.description(`enters ${type} '${entity.name}' (${count} ${type} named '${entity.name}')`)
+      currentCommand.action(function (v, cb) {
+        this.prompt({
+          type: "input",
+          name: "index",
+          message: message
+        }, function (result) {
+          callback(v, cb, currentCommand.entitites[result.index - 1])
+        })
+      })
+    } else {
+      currentCommand = vorpal.
+        command(`${type} ${slug}`, `enters ${type} '${entity.name}'`)
+        .alias(slug)
+        .action(function(v, cb) {
+          callback(v, cb, entity)
+        })
+
+      currentCommand.entitites = [entity]
+    }
+
+    vcommands[slug] = currentCommand
+  })
 }
